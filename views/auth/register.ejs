@@ -1,0 +1,41 @@
+<!— simple page without layout —>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Register</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-6 offset-3">
+        <h1>Register</h1>
+        <form action="/auth/register" method="POST">
+          <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" name="username" id="username" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="roll">Roll:</label>
+            <select name="roll" id="roll" placeholder="Select your role" class="form-control">
+              <option value="student">Student</option>
+              <option value="driver">Driver</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-secondary mt-3 mb-3">Register</button>
+          <a href="/auth/login" class="btn btn-link">Already have an account? Login</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

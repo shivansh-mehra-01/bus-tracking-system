@@ -1,0 +1,41 @@
+<!-- views/panels/driver-dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Driver Dashboard</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body>
+  <h1>Welcome to Driver Dashboard</h1>
+
+  <!-- optional driver name input -->
+  <label>
+    Name: <input id="driverName" placeholder="Driver name (optional)"/>
+  </label>
+
+  <div class="controls">
+    <button id="goLiveBtn">Go Live</button>
+    <button id="goOfflineBtn" disabled>Stop Live</button>
+  </div>
+
+  <!-- Map -->
+  <div class="card p-4">
+    <div id="map"></div>
+  </div>
+
+  <!-- Socket.IO client (served by your server) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- UPDATED: shared map + local marker (driver sees own marker) -->
+  <script src="/js/leaflet.js"></script>
+  <!-- UPDATED: driver-specific socket code -->
+  <script src="/js/socketDriver.js"></script>
+</body>
+</html>

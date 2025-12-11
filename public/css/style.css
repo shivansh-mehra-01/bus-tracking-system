@@ -1,0 +1,83 @@
+/* Make entire page take full height */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Body flex layout to push footer at bottom */
+body {
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* UPDATED: map + drivers list styling */
+#map {
+    height: 70vh;
+    border: 1px solid #ddd;
+    margin-top: 12px;
+}
+
+#driversList {
+    margin-top: 8px;
+}
+
+.controls {
+    margin-top: 8px;
+}
+
+.driver-row {
+    padding: 6px;
+    border-bottom: 1px dashed #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Main content full stretch */
+main {
+    flex: 1;
+    /* <-- this keeps footer at bottom */
+}
+
+/* Navbar customizations (optional) */
+.register-btn {
+    background-color: green !important;
+    color: white !important;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    /* pushes footer down */
+    width: 100%;
+}
+
+.f-info {
+    padding: 20px 0;
+    text-align: center;
+    border-top: 1px solid #e7e7e7;
+    background: #f8f8f8;
+}
+
+.f-info-socials a {
+    margin-right: 10px;
+    color: #333;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.f-info-brand a {
+    color: black;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 10px 5px;
+    text-decoration: none;
+}
+
+.f-info-brand a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,9 @@
+<div class="jumbotron">
+  <h1>Welcome to SISTec Bus Route</h1>
+  <p class="lead">Let's get started the journey with SISTec Bus Route</p>
+  <% if (!loggedIn) { %>
+    <a href="/auth/register" class="btn btn-primary">Get Started</a>
+  <% } else { %>
+    <a href="/student/dashboard" class="btn btn-primary">Go to Dashboard</a>
+  <% } %>
+</div>

@@ -1,0 +1,32 @@
+<!-- views/panels/student-dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body>
+  <h1>Welcome to Student Dashboard</h1>
+
+  <div id="driversList"><strong>Live drivers list will appear here</strong></div>
+
+  <div class="card p-4">
+    <div id="map"></div>
+  </div>
+
+  <!-- Socket.IO client (served by your server) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- UPDATED: shared map setup (defines map, icons and student local marker) -->
+  <script src="/js/leaflet.js"></script>
+  <!-- UPDATED: student socket handling (show red drivers + follow) -->
+  <script src="/js/socketStudent.js"></script>
+</body>
+</html>
