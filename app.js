@@ -14,10 +14,15 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // --- MongoDB connect ---
+require("dotenv").config();
+
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/myapp";
+
 mongoose
-  .connect("mongodb://localhost:27017/myapp")
+  .connect(MONGO_URL)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Failed to connect to MongoDB", err));
+
 
 // --- Express / EJS setup ---
 app.set("view engine", "ejs");
@@ -239,6 +244,7 @@ app.post("/auth/logout", (req, res) => {
 });
 
 // start
-server.listen(3000, () => {
-  console.log(`Server is running on http://localhost:3000`);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on ${PORT}`);
 });
