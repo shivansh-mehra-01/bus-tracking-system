@@ -1,5 +1,8 @@
 // ================= COLLEGE LOCATION =================
 const COLLEGE_COORDS = [23.3039, 77.3400]; // change to your college lat,lng
+const ARRIVAL_DISTANCE = 100; // meters
+let hasReachedCollege = false;
+const isStudentPage = document.body.dataset.page === "student";
 
 // ================= MAP SETUP =================
 const map = L.map('map').setView([20.5937, 78.9629], 5);
@@ -29,35 +32,69 @@ const collegeMarker = L.marker(COLLEGE_COORDS)
   .addTo(map)
   .bindPopup("College");
 
-// ================= STUDENT LOCAL MARKER =================
-let studentMarker = null;
+// ================= STUDENT GPS DOT (ONLY ON STUDENT PAGE) =================
+const pageType = document.body.dataset.page;
+let studentDot = null;
+let accuracyCircle = null;
+let hasCentered = false;
 
-if (typeof navigator !== 'undefined' && navigator.geolocation && document.getElementById('map')) {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      map.setView([pos.coords.latitude, pos.coords.longitude], 13);
-    },
-    () => {},
-    { enableHighAccuracy: true, maximumAge: 1000 }
-  );
-
+if (
+  pageType === "student" &&
+  navigator.geolocation &&
+  document.getElementById("map")
+) {
   navigator.geolocation.watchPosition(
     (pos) => {
-      const { latitude, longitude } = pos.coords;
+      const { latitude, longitude, accuracy } = pos.coords;
+      const latlng = [latitude, longitude];
 
-      if (!studentMarker) {
-        studentMarker = L.marker([latitude, longitude], { icon: studentIcon })
+      // 🔵 Blue GPS dot
+      if (!studentDot) {
+        const gpsIcon = L.divIcon({
+          className: "",
+          html: `<div class="student-gps-dot"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7]
+        });
+
+        studentDot = L.marker(latlng, { icon: gpsIcon })
           .addTo(map)
-          .bindPopup("You (local)")
-          .openPopup();
+          .bindPopup("You (Student)");
+
+        // ✅ center ONLY once
+        if (!hasCentered) {
+          map.setView(latlng, 15);
+          hasCentered = true;
+        }
       } else {
-        studentMarker.setLatLng([latitude, longitude]);
+        studentDot.setLatLng(latlng);
+      }
+
+      // 🔵 Accuracy circle (LIMITED)
+      const safeAccuracy = Math.min(accuracy || 30, 80); // max 80 meters
+
+      if (!accuracyCircle) {
+        accuracyCircle = L.circle(latlng, {
+          radius: safeAccuracy,
+          color: "#1e88e5",
+          fillColor: "#1e88e5",
+          fillOpacity: 0.15,
+          weight: 1
+        }).addTo(map);
+      } else {
+        accuracyCircle.setLatLng(latlng);
+        accuracyCircle.setRadius(safeAccuracy);
       }
     },
     () => {},
-    { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+    {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000
+    }
   );
 }
+
 
 // ================= ROUTE HELPERS =================
 let driverRouteLine = null;
@@ -84,7 +121,38 @@ function getDistanceMeters(lat1, lon1, lat2, lon2) {
 // ================= DRIVER → COLLEGE ROUTE =================
 window.drawDriverRoute = async function (driverLat, driverLng) {
 
-  // update route only if moved >= 50m
+  // ❌ already reached → do nothing
+  if (hasReachedCollege) return;
+
+  // ===== CHECK ARRIVAL (driver → college) =====
+  const distanceToCollege = getDistanceMeters(
+    driverLat,
+    driverLng,
+    COLLEGE_COORDS[0],
+    COLLEGE_COORDS[1]
+  );
+
+  if (distanceToCollege <= ARRIVAL_DISTANCE) {
+    hasReachedCollege = true;
+
+    // UI update
+    const infoDiv = document.getElementById("routeInfo");
+    const statusDiv = document.getElementById("arrivalStatus");
+
+    if (infoDiv) infoDiv.innerText = "Distance: 0 km | ETA: 0 min";
+    if (statusDiv) statusDiv.innerText = "🏁 Bus has reached the college";
+
+    // remove route line (optional)
+    if (driverRouteLine) {
+      map.removeLayer(driverRouteLine);
+      driverRouteLine = null;
+    }
+
+    console.log("Driver reached college");
+    return;
+  }
+
+  // ===== UPDATE ROUTE ONLY IF MOVED >= 50m =====
   if (lastRoutePoint) {
     const moved = getDistanceMeters(
       lastRoutePoint.lat,
@@ -92,7 +160,6 @@ window.drawDriverRoute = async function (driverLat, driverLng) {
       driverLat,
       driverLng
     );
-
     if (moved < MIN_ROUTE_DISTANCE) return;
   }
 
@@ -109,7 +176,7 @@ window.drawDriverRoute = async function (driverLat, driverLng) {
 
     const route = data.routes[0];
 
-    // ================= ETA + DISTANCE =================
+    // ===== ETA + DISTANCE =====
     const distanceKm = (route.distance / 1000).toFixed(2);
     const etaMin = Math.round(route.duration / 60);
 
@@ -118,14 +185,12 @@ window.drawDriverRoute = async function (driverLat, driverLng) {
       infoDiv.innerText = `Distance: ${distanceKm} km | ETA: ${etaMin} min`;
     }
 
-    // ================= DRAW ROUTE =================
+    // ===== DRAW ROUTE =====
     const routeCoords = route.geometry.coordinates.map(
       c => [c[1], c[0]]
     );
 
-    if (driverRouteLine) {
-      map.removeLayer(driverRouteLine);
-    }
+    if (driverRouteLine) map.removeLayer(driverRouteLine);
 
     driverRouteLine = L.polyline(routeCoords, {
       color: "blue",

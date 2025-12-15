@@ -1,72 +1,98 @@
-// public/js/socketStudent.js
-// UPDATED: student-side socket handling to show red driver markers and provide "follow" action
 const socket = io();
 
-const markers = {}; // driver markers keyed by driver socket id
-let currentlyFollowing = null;
+let followedDriverId = null;
+let followedMarker = null;
 
 // debug
-socket.on('connect', () => console.log('Student connected socket id:', socket.id));
+socket.on("connect", () => {
+  console.log("Student connected:", socket.id);
+});
 
-// UPDATED: receive live drivers list (so UI can show names + follow buttons)
-socket.on("liveDrivers", (list) => {
-  const container = document.getElementById("driversList");
-  if (!container) return;
-  container.innerHTML = "<strong>Live drivers:</strong>";
-  if (!list || list.length === 0) {
-    container.innerHTML += "<div>No drivers live right now.</div>";
+// ================= DRIVER LIST =================
+socket.on("liveDrivers", (drivers) => {
+  const list = document.getElementById("driversList");
+  if (!list) return;
+
+  list.innerHTML = "<strong>Live drivers:</strong>";
+
+  if (!drivers || drivers.length === 0) {
+    list.innerHTML += "<div>No drivers live</div>";
     return;
   }
-  list.forEach(d => {
+
+  drivers.forEach(driver => {
     const row = document.createElement("div");
     row.className = "driver-row";
-    row.innerHTML = `<div>${d.name} (${d.socketId.slice(0,6)})</div>
-                     <div><button data-sid="${d.socketId}">${ currentlyFollowing === d.socketId ? 'Following' : 'Follow' }</button></div>`;
-    container.appendChild(row);
+
+    row.innerHTML = `
+      <span>${driver.name}</span>
+      <button data-id="${driver.socketId}">
+        ${followedDriverId === driver.socketId ? "Following" : "Follow"}
+      </button>
+    `;
+
+    list.appendChild(row);
   });
 
-  // attach click handlers
-  container.querySelectorAll("button[data-sid]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const sid = btn.getAttribute("data-sid");
-      currentlyFollowing = sid;
-      // update buttons UI quickly
-      container.querySelectorAll("button[data-sid]").forEach(b => b.innerText = (b.getAttribute("data-sid") === sid) ? 'Following' : 'Follow');
-      alert("Now following driver: " + sid.slice(0,6));
-    });
+  list.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.onclick = () => {
+      followedDriverId = btn.dataset.id;
+
+      // clear old state
+      if (followedMarker) {
+        map.removeLayer(followedMarker);
+        followedMarker = null;
+      }
+
+      if (window.driverRouteLine) {
+        map.removeLayer(window.driverRouteLine);
+        window.driverRouteLine = null;
+      }
+
+      document.getElementById("arrivalStatus").innerText = "";
+      document.getElementById("routeInfo").innerText = "Distance: -- km | ETA: -- min";
+
+      // update UI
+      list.querySelectorAll("button").forEach(b => b.innerText = "Follow");
+      btn.innerText = "Following";
+
+      alert("Following driver " + followedDriverId.slice(0,6));
+    };
   });
 });
 
-// UPDATED: when server broadcasts driver location (always use RED driver icon)
-socket.on("updateLocation", (driverData) => {
-  const { id, latitude, longitude } = driverData;
-  if (!id) return;
+// ================= DRIVER LOCATION =================
+socket.on("updateLocation", ({ id, latitude, longitude }) => {
+  // ❌ ignore if not following
+  if (!followedDriverId || id !== followedDriverId) return;
 
-  if (markers[id]) {
-    markers[id].setLatLng([latitude, longitude]);
-  } else {
-    markers[id] = L.marker([latitude, longitude], { icon: driverIcon })
+  // ✅ show ONLY followed driver
+  if (!followedMarker) {
+    followedMarker = L.marker([latitude, longitude], { icon: driverIcon })
       .addTo(map)
-      .bindPopup(`Driver: ${id}`);
+      .bindPopup("Bus (Live)")
+      .openPopup();
+  } else {
+    followedMarker.setLatLng([latitude, longitude]);
   }
 
-  // If following, center map and open popup
-  if (currentlyFollowing && id === currentlyFollowing) {
-    map.setView([latitude, longitude], 15, { animate: true });
-    markers[id].openPopup();
-  }
+  map.setView([latitude, longitude], 15);
+
+  // 🔥 draw route + ETA + arrival
+  window.drawDriverRoute(latitude, longitude);
 });
 
-// Remove marker on disconnect
+// ================= DRIVER OFFLINE =================
 socket.on("user-disconnected", ({ id }) => {
-  if (markers[id]) {
-    map.removeLayer(markers[id]);
-    delete markers[id];
-  }
-});
+  if (id === followedDriverId) {
+    followedDriverId = null;
 
-// (Optional) generic location handler left minimal
-socket.on("recieve-location", (data) => {
-  // You can handle other clients here. For clarity we focus on driver updates via updateLocation.
-  // console.log('recieve-location: ', data);
+    if (followedMarker) {
+      map.removeLayer(followedMarker);
+      followedMarker = null;
+    }
+
+    document.getElementById("routeInfo").innerText = "Driver went offline";
+    document.getElementById("arrivalStatus").innerText = "";
+  }
 });

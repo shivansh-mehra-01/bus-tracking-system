@@ -3,30 +3,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard</title>
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="/public/css/style.css">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <link rel="stylesheet" href="/public/css/style.css" />
 </head>
-<body>
+
+<body data-page="student">
   <h1>Welcome to Student Dashboard</h1>
 
-  <div id="driversList"><strong>Live drivers list will appear here</strong></div>
-
-  <div class="card p-4">
-    <div id="map"></div>
+  <!-- ===== LIVE DRIVERS LIST ===== -->
+  <div id="driversList">
+    <strong>Live drivers list will appear here</strong>
   </div>
 
-  <!-- Socket.IO client (served by your server) -->
+  <!-- ===== ROUTE INFO ===== -->
+  <div id="routeInfo" style="margin:10px 0; font-weight:600;">
+    Distance: -- km | ETA: -- min
+  </div>
+
+  <div id="arrivalStatus" style="margin-bottom:10px; color:green;"></div>
+
+  <!-- ===== MAP ===== -->
+  <div id="map" style="height: 70vh;"></div>
+
+  <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- UPDATED: shared map setup (defines map, icons and student local marker) -->
+  <!-- Shared map + route logic -->
   <script src="/js/leaflet.js"></script>
-  <!-- UPDATED: student socket handling (show red drivers + follow) -->
+
+  <!-- Student follow + live tracking -->
   <script src="/js/socketStudent.js"></script>
 </body>
 </html>
