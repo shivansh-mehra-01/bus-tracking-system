@@ -2,6 +2,8 @@
 const COLLEGE_COORDS = [23.3039, 77.3400]; // change to your college lat,lng
 const ARRIVAL_DISTANCE = 100; // meters
 let hasReachedCollege = false;
+// ===== GLOBAL DRIVER LIVE FLAG =====
+window.isDriverLive = false;
 const isStudentPage = document.body.dataset.page === "student";
 
 // ================= MAP SETUP =================
@@ -33,65 +35,76 @@ const collegeMarker = L.marker(COLLEGE_COORDS)
   .bindPopup("College");
 
 // ================= STUDENT GPS DOT (ONLY ON STUDENT PAGE) =================
+// ================= STUDENT GPS DOT (ONLY ON STUDENT PAGE) =================
 const pageType = document.body.dataset.page;
 let studentDot = null;
 let accuracyCircle = null;
-let hasCentered = false;
+let hasCenteredStudent = false;
 
 if (
-  pageType === "student" &&
+  ((pageType === "student") || (pageType === "driver" && window.isDriverLive === false)) &&
   navigator.geolocation &&
   document.getElementById("map")
 ) {
   navigator.geolocation.watchPosition(
     (pos) => {
-      const { latitude, longitude, accuracy } = pos.coords;
-      const latlng = [latitude, longitude];
+  const { latitude, longitude, accuracy } = pos.coords;
+  const latlng = [latitude, longitude];
 
-      // 🔵 Blue GPS dot
-      if (!studentDot) {
-        const gpsIcon = L.divIcon({
-          className: "",
-          html: `<div class="student-gps-dot"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
-        });
-
-        studentDot = L.marker(latlng, { icon: gpsIcon })
-          .addTo(map)
-          .bindPopup("You (Student)");
-
-        // ✅ center ONLY once
-        if (!hasCentered) {
-          map.setView(latlng, 15);
-          hasCentered = true;
-        }
-      } else {
-        studentDot.setLatLng(latlng);
-      }
-
-      // 🔵 Accuracy circle (LIMITED)
-      const safeAccuracy = Math.min(accuracy || 30, 80); // max 80 meters
-
-      if (!accuracyCircle) {
-        accuracyCircle = L.circle(latlng, {
-          radius: safeAccuracy,
-          color: "#1e88e5",
-          fillColor: "#1e88e5",
-          fillOpacity: 0.15,
-          weight: 1
-        }).addTo(map);
-      } else {
-        accuracyCircle.setLatLng(latlng);
-        accuracyCircle.setRadius(safeAccuracy);
-      }
-    },
-    () => {},
-    {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000
+  // 🚫 DRIVER IS LIVE → REMOVE BLUE DOT COMPLETELY
+  if (pageType === "driver" && window.isDriverLive === true) {
+    if (studentDot) {
+      map.removeLayer(studentDot);
+      studentDot = null;
     }
+    if (accuracyCircle) {
+      map.removeLayer(accuracyCircle);
+      accuracyCircle = null;
+    }
+    return; // ⛔ STOP HERE
+  }
+
+  // 🔵 BLUE DOT (student OR driver-offline)
+  if (!studentDot) {
+    const gpsIcon = L.divIcon({
+      className: "",
+      html: `<div class="student-gps-dot"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+
+    studentDot = L.marker(latlng, { icon: gpsIcon })
+      .addTo(map)
+      .bindPopup(
+        pageType === "driver" ? "You (Driver – Offline)" : "You (Student)"
+      );
+
+    if (!hasCentered) {
+      map.setView(latlng, 15);
+      hasCentered = true;
+    }
+  } else {
+    studentDot.setLatLng(latlng);
+  }
+
+  // 🔵 Accuracy circle (safe size)
+  const safeAccuracy = Math.min(accuracy || 30, 80);
+
+  if (!accuracyCircle) {
+    accuracyCircle = L.circle(latlng, {
+      radius: safeAccuracy,
+      color: "#1e88e5",
+      fillColor: "#1e88e5",
+      fillOpacity: 0.15,
+      weight: 1
+    }).addTo(map);
+  } else {
+    accuracyCircle.setLatLng(latlng);
+    accuracyCircle.setRadius(safeAccuracy);
+  }
+},
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
   );
 }
 
