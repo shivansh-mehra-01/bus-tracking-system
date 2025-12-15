@@ -2,6 +2,7 @@ const socket = io();
 
 let followedDriverId = null;
 let followedMarker = null;
+let hasAutoCentered = false;
 
 // debug
 socket.on("connect", () => {
@@ -37,6 +38,7 @@ socket.on("liveDrivers", (drivers) => {
   list.querySelectorAll("button[data-id]").forEach(btn => {
     btn.onclick = () => {
       followedDriverId = btn.dataset.id;
+      hasAutoCentered = false;
 
       // clear old state
       if (followedMarker) {
@@ -56,7 +58,7 @@ socket.on("liveDrivers", (drivers) => {
       list.querySelectorAll("button").forEach(b => b.innerText = "Follow");
       btn.innerText = "Following";
 
-      alert("Following driver " + followedDriverId.slice(0,6));
+      alert("Following driver " + followedDriverId.slice(0, 6));
     };
   });
 });
@@ -76,7 +78,11 @@ socket.on("updateLocation", ({ id, latitude, longitude }) => {
     followedMarker.setLatLng([latitude, longitude]);
   }
 
-  map.setView([latitude, longitude], 15);
+  if (!hasAutoCentered) {
+    map.setView([latitude, longitude], 15);
+    hasAutoCentered = true;
+  }
+
 
   // 🔥 draw route + ETA + arrival
   window.drawDriverRoute(latitude, longitude);
