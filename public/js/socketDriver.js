@@ -11,7 +11,7 @@ const goOfflineBtn = document.getElementById("goOfflineBtn");
 // Optional: send driver name when going live
 function sendDriverLive() {
   const nameInput = document.getElementById("driverName");
-  const name = nameInput ? (nameInput.value || `Driver-${socket.id.slice(0,6)}`) : `Driver-${socket.id.slice(0,6)}`;
+  const name = nameInput ? (nameInput.value || `Driver-${socket.id.slice(0, 6)}`) : `Driver-${socket.id.slice(0, 6)}`;
   socket.emit("driverLive", { name });
 }
 
@@ -28,6 +28,8 @@ goLiveBtn?.addEventListener("click", () => {
 
   watchId = navigator.geolocation.watchPosition((pos) => {
     const { latitude, longitude } = pos.coords;
+    drawDriverRoute(latitude, longitude);
+
     // Emit standardized event
     socket.emit("driverLocation", { latitude, longitude });
 
@@ -40,6 +42,9 @@ goLiveBtn?.addEventListener("click", () => {
     } else {
       myMarker.setLatLng([latitude, longitude]);
     }
+
+    drawDriverRoute(latitude, longitude);
+
   }, (err) => {
     console.error("Geolocation error (driver):", err);
     alert("Geolocation error: " + err.message);
@@ -65,6 +70,3 @@ goOfflineBtn?.addEventListener("click", () => {
   goOfflineBtn?.setAttribute("disabled", "true");
   goLiveBtn?.removeAttribute("disabled");
 });
-
-// Optional: driver can listen for updateLocation to see other drivers (not necessary)
-// socket.on("updateLocation", (data) => { console.log("driver received updateLocation", data); });

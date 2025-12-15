@@ -1,26 +1,33 @@
 <!-- views/panels/driver-dashboard.ejs -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Driver Dashboard</title>
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="/public/css/style.css">
 </head>
+
 <body>
   <h1>Welcome to Driver Dashboard</h1>
 
   <!-- optional driver name input -->
   <label>
-    Name: <input id="driverName" placeholder="Driver name (optional)"/>
+    Name: <input id="driverName" placeholder="Driver name (optional)" />
   </label>
 
   <div class="controls">
     <button id="goLiveBtn">Go Live</button>
     <button id="goOfflineBtn" disabled>Stop Live</button>
+  </div>
+
+  <!-- Distance and Time -->
+  <div id="routeInfo" style="margin:10px 0; font-weight:600;">
+    Distance: -- km | ETA: -- min
   </div>
 
   <!-- Map -->
@@ -38,4 +45,5 @@
   <!-- UPDATED: driver-specific socket code -->
   <script src="/js/socketDriver.js"></script>
 </body>
+
 </html>

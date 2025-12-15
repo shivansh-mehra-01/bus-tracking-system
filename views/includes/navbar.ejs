@@ -1,28 +1,68 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
-  <a class="navbar-brand" href="/"><i class="fa-solid fa-bus-simple"></i> BusRoute</a>
+<nav class="navbar navbar-expand-md navbar-light bg-light sticky-top">
+  <div class="container-fluid">
 
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-    aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+    <!-- Brand -->
+    <a class="navbar-brand" href="/">
+      <i class="fa-solid fa-bus-simple"></i> BusRoute
+    </a>
 
-  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-    <div class="navbar-nav mr-auto">
-      <a class="nav-item nav-link" href="/">Home</a>
-      <a class="nav-item nav-link" href="#">Features</a>
-      <a class="nav-item nav-link" href="#">Pricing</a>
+    <!-- Mobile toggle -->
+    <button class="navbar-toggler d-md-none" type="button"
+      data-bs-toggle="offcanvas"
+      data-bs-target="#mobileMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Desktop navbar -->
+    <div class="collapse navbar-collapse d-none d-md-flex">
+      <div class="navbar-nav me-auto">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="#">Features</a>
+        <a class="nav-link" href="#">Pricing</a>
+      </div>
+
+      <div class="d-flex">
+        <% if (!loggedIn) { %>
+          <a href="/auth/login" class="btn btn-primary me-2">Login</a>
+          <a href="/auth/register" class="btn btn-outline-secondary">Register</a>
+        <% } else { %>
+          <span class="me-2 align-self-center">
+            Hi, <strong><%= username %></strong>
+          </span>
+          <form action="/auth/logout" method="POST">
+            <button class="btn btn-secondary">Logout</button>
+          </form>
+        <% } %>
+      </div>
     </div>
 
-    <div class="auth-btns">
-      <% if (!loggedIn) { %>
-        <a href="/auth/login" class="btn btn-primary mr-2">Login</a>
-        <a href="/auth/register" class="btn btn-outline-secondary">Register</a>
-      <% } else { %>
-        <span class="mr-2">Hi, <%= username %></span>
-        <form action="/auth/logout" method="POST" style="display:inline">
-          <button type="submit" class="btn btn-secondary">Logout</button>
-        </form>
-      <% } %>
+    <!-- Mobile Offcanvas -->
+    <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileMenu">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title">
+          <i class="fa-solid fa-bus-simple"></i> BusRoute
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+      </div>
+
+      <div class="offcanvas-body">
+        <a class="nav-link mb-2" href="/">🏠 Home</a>
+        <a class="nav-link mb-2" href="#">✨ Features</a>
+        <a class="nav-link mb-2" href="#">💰 Pricing</a>
+
+        <hr>
+
+        <% if (!loggedIn) { %>
+          <a href="/auth/login" class="btn btn-primary w-100 mb-2">Login</a>
+          <a href="/auth/register" class="btn btn-outline-secondary w-100">Register</a>
+        <% } else { %>
+          <p>Hi, <strong><%= username %></strong></p>
+          <form action="/auth/logout" method="POST">
+            <button class="btn btn-secondary w-100">Logout</button>
+          </form>
+        <% } %>
+      </div>
     </div>
+
   </div>
 </nav>
