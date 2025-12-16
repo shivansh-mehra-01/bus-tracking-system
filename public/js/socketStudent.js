@@ -1,104 +1,53 @@
 const socket = io();
 
-let followedDriverId = null;
-let followedMarker = null;
-let hasAutoCentered = false;
+const busSelect = document.getElementById("busSelect");
+const trackBtn = document.getElementById("trackBusBtn");
+const busStatus = document.getElementById("busStatus");
 
-// debug
+let selectedBusNumber = null;
+let busMarker = null;
+
 socket.on("connect", () => {
-  console.log("Student connected:", socket.id);
+  console.log("Student socket connected");
 });
 
-// ================= DRIVER LIST =================
-socket.on("liveDrivers", (drivers) => {
-  const list = document.getElementById("driversList");
-  if (!list) return;
+socket.on("liveBuses", (list) => {
+  console.log("Student received liveBuses:", list);
 
-  list.innerHTML = "<strong>Live drivers:</strong>";
+  busSelect.innerHTML = `<option value="">Select Bus</option>`;
 
-  if (!drivers || drivers.length === 0) {
-    list.innerHTML += "<div>No drivers live</div>";
-    return;
-  }
-
-  drivers.forEach(driver => {
-    const row = document.createElement("div");
-    row.className = "driver-row";
-
-    row.innerHTML = `
-      <span>${driver.name}</span>
-      <button data-id="${driver.socketId}">
-        ${followedDriverId === driver.socketId ? "Following" : "Follow"}
-      </button>
-    `;
-
-    list.appendChild(row);
+  list.forEach((b) => {
+    const opt = document.createElement("option");
+    opt.value = b.busNumber;
+    opt.textContent = `Bus ${b.busNumber}`;
+    busSelect.appendChild(opt);
   });
 
-  list.querySelectorAll("button[data-id]").forEach(btn => {
-    btn.onclick = () => {
-      followedDriverId = btn.dataset.id;
-      hasAutoCentered = false;
-
-      // clear old state
-      if (followedMarker) {
-        map.removeLayer(followedMarker);
-        followedMarker = null;
-      }
-
-      if (window.driverRouteLine) {
-        map.removeLayer(window.driverRouteLine);
-        window.driverRouteLine = null;
-      }
-
-      document.getElementById("arrivalStatus").innerText = "";
-      document.getElementById("routeInfo").innerText = "Distance: -- km | ETA: -- min";
-
-      // update UI
-      list.querySelectorAll("button").forEach(b => b.innerText = "Follow");
-      btn.innerText = "Following";
-
-      alert("Following driver " + followedDriverId.slice(0, 6));
-    };
-  });
+  busSelect.disabled = list.length === 0;
 });
 
-// ================= DRIVER LOCATION =================
-socket.on("updateLocation", ({ id, latitude, longitude }) => {
-  // ❌ ignore if not following
-  if (!followedDriverId || id !== followedDriverId) return;
+busSelect.addEventListener("change", () => {
+  trackBtn.disabled = !busSelect.value;
+});
 
-  // ✅ show ONLY followed driver
-  if (!followedMarker) {
-    followedMarker = L.marker([latitude, longitude], { icon: driverIcon })
+trackBtn.addEventListener("click", () => {
+  selectedBusNumber = busSelect.value;
+  busStatus.innerText = `Tracking Bus ${selectedBusNumber}`;
+});
+
+socket.on("busLocation", ({ busNumber, latitude, longitude }) => {
+  if (busNumber !== selectedBusNumber) return;
+
+  if (!busMarker) {
+    busMarker = L.marker([latitude, longitude], { icon: driverIcon })
       .addTo(map)
-      .bindPopup("Bus (Live)")
+      .bindPopup(`Bus ${busNumber}`)
       .openPopup();
-  } else {
-    followedMarker.setLatLng([latitude, longitude]);
-  }
 
-  if (!hasAutoCentered) {
     map.setView([latitude, longitude], 15);
-    hasAutoCentered = true;
+  } else {
+    busMarker.setLatLng([latitude, longitude]);
   }
 
-
-  // 🔥 draw route + ETA + arrival
-  window.drawDriverRoute(latitude, longitude);
-});
-
-// ================= DRIVER OFFLINE =================
-socket.on("user-disconnected", ({ id }) => {
-  if (id === followedDriverId) {
-    followedDriverId = null;
-
-    if (followedMarker) {
-      map.removeLayer(followedMarker);
-      followedMarker = null;
-    }
-
-    document.getElementById("routeInfo").innerText = "Driver went offline";
-    document.getElementById("arrivalStatus").innerText = "";
-  }
+  drawDriverRoute(latitude, longitude);
 });

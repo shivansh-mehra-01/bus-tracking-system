@@ -1,123 +1,121 @@
 // ================= COLLEGE LOCATION =================
-const COLLEGE_COORDS = [23.3039, 77.3400]; // change to your college lat,lng
+const COLLEGE_COORDS = [23.3039, 77.3400]; // college lat,lng
 const ARRIVAL_DISTANCE = 100; // meters
-let hasReachedCollege = false;
-// ===== GLOBAL DRIVER LIVE FLAG =====
-window.isDriverLive = false;
-const isStudentPage = document.body.dataset.page === "student";
+const MIN_ROUTE_DISTANCE = 50; // meters
+
+// ================= GLOBAL FLAGS =================
+window.isDriverLive = window.isDriverLive || false;
+const pageType = document.body.dataset.page;
+
+// user interaction lock (IMPORTANT)
+let userInteractedWithMap = false;
 
 // ================= MAP SETUP =================
-const map = L.map('map').setView([20.5937, 78.9629], 5);
+const map = L.map("map").setView([20.5937, 78.9629], 5);
+
+// Detect user interaction → STOP AUTO ZOOM
+map.on("zoomstart dragstart", () => {
+  userInteractedWithMap = true;
+});
 
 // Tiles
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap contributors"
 }).addTo(map);
 
 // ================= ICONS =================
 const driverIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41]
 });
 
-const studentIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
+const studentIcon = L.divIcon({
+  className: "",
+  html: `<div class="student-gps-dot"></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7]
 });
 
 // ================= COLLEGE MARKER =================
-const collegeMarker = L.marker(COLLEGE_COORDS)
-  .addTo(map)
-  .bindPopup("College");
+L.marker(COLLEGE_COORDS).addTo(map).bindPopup("College");
 
-// ================= STUDENT GPS DOT (ONLY ON STUDENT PAGE) =================
-// ================= STUDENT GPS DOT (ONLY ON STUDENT PAGE) =================
-const pageType = document.body.dataset.page;
+// ================= STUDENT / DRIVER-OFFLINE BLUE DOT =================
 let studentDot = null;
 let accuracyCircle = null;
 let hasCenteredStudent = false;
 
-if (
-  ((pageType === "student") || (pageType === "driver" && window.isDriverLive === false)) &&
-  navigator.geolocation &&
-  document.getElementById("map")
-) {
+if (navigator.geolocation && document.getElementById("map")) {
   navigator.geolocation.watchPosition(
     (pos) => {
-  const { latitude, longitude, accuracy } = pos.coords;
-  const latlng = [latitude, longitude];
+      const { latitude, longitude, accuracy } = pos.coords;
+      const latlng = [latitude, longitude];
 
-  // 🚫 DRIVER IS LIVE → REMOVE BLUE DOT COMPLETELY
-  if (pageType === "driver" && window.isDriverLive === true) {
-    if (studentDot) {
-      map.removeLayer(studentDot);
-      studentDot = null;
-    }
-    if (accuracyCircle) {
-      map.removeLayer(accuracyCircle);
-      accuracyCircle = null;
-    }
-    return; // ⛔ STOP HERE
-  }
+      // ❌ DRIVER LIVE → REMOVE BLUE DOT
+      if (pageType === "driver" && window.isDriverLive === true) {
+        if (studentDot) {
+          map.removeLayer(studentDot);
+          studentDot = null;
+        }
+        if (accuracyCircle) {
+          map.removeLayer(accuracyCircle);
+          accuracyCircle = null;
+        }
+        return;
+      }
 
-  // 🔵 BLUE DOT (student OR driver-offline)
-  if (!studentDot) {
-    const gpsIcon = L.divIcon({
-      className: "",
-      html: `<div class="student-gps-dot"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7]
-    });
+      // 🔵 BLUE DOT (student OR driver-offline)
+      if (!studentDot) {
+        studentDot = L.marker(latlng, { icon: studentIcon })
+          .addTo(map)
+          .bindPopup(
+            pageType === "driver"
+              ? "You (Driver – Offline)"
+              : "You (Student)"
+          );
 
-    studentDot = L.marker(latlng, { icon: gpsIcon })
-      .addTo(map)
-      .bindPopup(
-        pageType === "driver" ? "You (Driver – Offline)" : "You (Student)"
-      );
+        // auto center ONLY ONCE and ONLY if user didn’t touch map
+        if (!hasCenteredStudent && !userInteractedWithMap) {
+          map.setView(latlng, 15);
+          hasCenteredStudent = true;
+        }
+      } else {
+        studentDot.setLatLng(latlng);
+      }
 
-    if (!hasCentered) {
-      map.setView(latlng, 15);
-      hasCentered = true;
-    }
-  } else {
-    studentDot.setLatLng(latlng);
-  }
-
-  // 🔵 Accuracy circle (safe size)
-  const safeAccuracy = Math.min(accuracy || 30, 80);
-
-  if (!accuracyCircle) {
-    accuracyCircle = L.circle(latlng, {
-      radius: safeAccuracy,
-      color: "#1e88e5",
-      fillColor: "#1e88e5",
-      fillOpacity: 0.15,
-      weight: 1
-    }).addTo(map);
-  } else {
-    accuracyCircle.setLatLng(latlng);
-    accuracyCircle.setRadius(safeAccuracy);
-  }
-},
+      // 🔵 Accuracy circle
+      const safeAccuracy = Math.min(accuracy || 30, 80);
+      if (!accuracyCircle) {
+        accuracyCircle = L.circle(latlng, {
+          radius: safeAccuracy,
+          color: "#1e88e5",
+          fillColor: "#1e88e5",
+          fillOpacity: 0.15,
+          weight: 1
+        }).addTo(map);
+      } else {
+        accuracyCircle.setLatLng(latlng);
+        accuracyCircle.setRadius(safeAccuracy);
+      }
+    },
     () => {},
     { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
   );
 }
 
-
 // ================= ROUTE HELPERS =================
 let driverRouteLine = null;
 let lastRoutePoint = null;
-const MIN_ROUTE_DISTANCE = 50; // meters
+let hasReachedCollege = false;
+let hasFitRoute = false;
 
 // Haversine distance
 function getDistanceMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;
-  const toRad = d => d * Math.PI / 180;
+  const toRad = (d) => (d * Math.PI) / 180;
 
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -125,19 +123,17 @@ function getDistanceMeters(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
 
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // ================= DRIVER → COLLEGE ROUTE =================
 window.drawDriverRoute = async function (driverLat, driverLng) {
-
-  // ❌ already reached → do nothing
   if (hasReachedCollege) return;
 
-  // ===== CHECK ARRIVAL (driver → college) =====
+  // ===== ARRIVAL CHECK =====
   const distanceToCollege = getDistanceMeters(
     driverLat,
     driverLng,
@@ -148,24 +144,20 @@ window.drawDriverRoute = async function (driverLat, driverLng) {
   if (distanceToCollege <= ARRIVAL_DISTANCE) {
     hasReachedCollege = true;
 
-    // UI update
     const infoDiv = document.getElementById("routeInfo");
     const statusDiv = document.getElementById("arrivalStatus");
 
     if (infoDiv) infoDiv.innerText = "Distance: 0 km | ETA: 0 min";
     if (statusDiv) statusDiv.innerText = "🏁 Bus has reached the college";
 
-    // remove route line (optional)
     if (driverRouteLine) {
       map.removeLayer(driverRouteLine);
       driverRouteLine = null;
     }
-
-    console.log("Driver reached college");
     return;
   }
 
-  // ===== UPDATE ROUTE ONLY IF MOVED >= 50m =====
+  // ===== UPDATE ONLY IF MOVED ≥ 50m =====
   if (lastRoutePoint) {
     const moved = getDistanceMeters(
       lastRoutePoint.lat,
@@ -200,7 +192,7 @@ window.drawDriverRoute = async function (driverLat, driverLng) {
 
     // ===== DRAW ROUTE =====
     const routeCoords = route.geometry.coordinates.map(
-      c => [c[1], c[0]]
+      (c) => [c[1], c[0]]
     );
 
     if (driverRouteLine) map.removeLayer(driverRouteLine);
@@ -210,9 +202,24 @@ window.drawDriverRoute = async function (driverLat, driverLng) {
       weight: 6
     }).addTo(map);
 
-    map.fitBounds(driverRouteLine.getBounds(), { padding: [40, 40] });
-
+    // auto fit ONLY ONCE and ONLY if user didn’t interact
+    if (!hasFitRoute && !userInteractedWithMap) {
+      map.fitBounds(driverRouteLine.getBounds(), { padding: [40, 40] });
+      hasFitRoute = true;
+    }
   } catch (err) {
     console.warn("Route update skipped");
   }
 };
+
+// ================= DRIVER LIVE / OFFLINE EVENTS =================
+document.addEventListener("driver-live", () => {
+  window.isDriverLive = true;
+});
+
+document.addEventListener("driver-offline", () => {
+  window.isDriverLive = false;
+  hasFitRoute = false;
+  hasReachedCollege = false;
+  lastRoutePoint = null;
+});

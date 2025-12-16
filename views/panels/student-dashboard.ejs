@@ -1,47 +1,55 @@
-<!-- views/panels/student-dashboard.ejs -->
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Student Dashboard</title>
+<html>
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <link rel="stylesheet" href="/public/css/style.css" />
+<head>
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body data-page="student">
-  <h1>Welcome to Student Dashboard</h1>
+  <div class="container-fluid">
+    <h3 class="my-3">Student Dashboard</h3>
 
-  <!-- ===== LIVE DRIVERS LIST ===== -->
-  <div id="driversList">
-    <strong>Live drivers list will appear here</strong>
+    <!-- Card -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Track Bus</h5>
+
+        <div class="form-group">
+          <label>Bus Number</label>
+          <select id="busSelect" class="form-control">
+            <option value="">Select Bus</option>
+          </select>
+        </div>
+
+        <button id="trackBusBtn" class="btn btn-primary" disabled>
+          <i class="fas fa-location-arrow"></i> Track Bus
+        </button>
+
+        <p id="busStatus" class="mt-2 text-muted"></p>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="alert alert-info py-2" id="routeInfo">
+      Distance: -- km | ETA: -- min
+    </div>
+
+    <div id="arrivalStatus" class="text-success font-weight-bold"></div>
+
+    <!-- Map -->
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div id="map"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- ===== ROUTE INFO ===== -->
-  <div id="routeInfo" style="margin:10px 0; font-weight:600;">
-    Distance: -- km | ETA: -- min
-  </div>
-
-  <div id="arrivalStatus" style="margin-bottom:10px; color:green;"></div>
-
-  <!-- ===== MAP ===== -->
-  <div id="map" style="height: 70vh;"></div>
-
-  <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
-
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Shared map + route logic -->
   <script src="/js/leaflet.js"></script>
-
-  <!-- Student follow + live tracking -->
   <script src="/js/socketStudent.js"></script>
+
 </body>
+
 </html>
