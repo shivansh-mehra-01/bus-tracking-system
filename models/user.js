@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
       required: true
     },
 
-    roll: {
+    role: {
       type: String,
       enum: ["student", "driver"],
       required: true
@@ -24,14 +24,14 @@ const userSchema = new mongoose.Schema(
     busNumber: {
       type: String,
       required: function () {
-        return this.roll === "driver";
+        return this.role === "driver";
       }
     },
 
     routeName: {
       type: String,
       required: function () {
-        return this.roll === "driver";
+        return this.role === "driver";
       }
     }
   },

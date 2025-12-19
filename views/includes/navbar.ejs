@@ -1,73 +1,90 @@
-<nav class="navbar navbar-expand-md navbar-light bg-light sticky-top">
-  <div class="container-fluid">
+<nav class="navbar navbar-light bg-light sticky-top">
+  <div class="container-fluid d-flex align-items-center">
 
     <!-- Brand -->
-    <a class="navbar-brand" href="/">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
       <i class="fa-solid fa-bus-simple"></i> BusRoute
     </a>
 
-    <!-- Mobile toggle -->
-    <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <!-- Desktop navbar -->
-    <div class="collapse navbar-collapse d-none d-md-flex">
-      <div class="navbar-nav me-auto">
-        <a class="nav-link" href="/">Home</a>
-        <a class="nav-link" href="#">Features</a>
-        <a class="nav-link" href="#">Pricing</a>
-      </div>
-
-      <div class="d-flex">
-        <% if (!loggedIn) { %>
-          <a href="/auth/login" class="btn btn-primary me-2">Login</a>
-          <a href="/auth/register" class="btn btn-outline-secondary">Register</a>
-          <% } else { %>
-            <span class="me-2 align-self-center">
-              Hi, <strong>
-                <%= username %>
-              </strong>
-            </span>
-            <form action="/auth/logout" method="POST">
-              <button class="btn btn-outline-secondary w-100">Logout</button>
-            </form>
-            <% } %>
-      </div>
+    <!-- Desktop links -->
+    <div class="d-none d-lg-flex gap-3 ms-4">
+      <a class="nav-link" href="/">Home</a>
+      <a class="nav-link" href="#">Features</a>
+      <a class="nav-link" href="#">Pricing</a>
     </div>
 
-    <!-- Mobile Offcanvas -->
-    <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileMenu">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title">
-          <i class="fa-solid fa-bus-simple"></i> BusRoute
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    <!-- Right side -->
+    <div class="d-flex align-items-center ms-auto gap-2">
+
+      <!-- Desktop auth -->
+      <div class="d-none d-lg-flex align-items-center gap-2">
+        <% if (!currentUser) { %>
+          <a href="/auth/login" class="btn btn-primary btn-sm">Login</a>
+          <a href="/auth/register" class="btn btn-outline-secondary btn-sm">Register</a>
+        <% } else { %>
+          <span class="fw-semibold">
+            Hi, <%= currentUser.username %>
+          </span>
+
+          <form action="/auth/logout" method="POST" class="d-inline">
+            <button class="btn btn-outline-danger btn-sm ms-2">Logout</button>
+          </form>
+        <% } %>
       </div>
 
-      <div class="offcanvas-body">
-        <a class="nav-link mb-2" href="/">🏠 Home</a>
-        <a class="nav-link mb-2" href="#">✨ Features</a>
-        <a class="nav-link mb-2" href="#">💰 Pricing</a>
-
-        <hr>
-
-        <% if (!loggedIn) { %>
-          <a href="/auth/login" class="btn btn-primary w-100 mb-2">Login</a>
-          <a href="/auth/register" class="btn btn-outline-secondary w-100">Register</a>
-          <% } else { %>
-            <p>Hi, <strong>
-                <%= username %>
-              </strong></p>
-            <form action="/auth/logout" method="POST" style="display:inline;">
-              <button type="submit" class="btn btn-outline-danger btn-sm">
-                Logout
-              </button>
-            </form>
-
-            <% } %>
-      </div>
+      <!-- Hamburger -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#mainMenu"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
     </div>
-
   </div>
 </nav>
+
+<!-- ================= OFFCANVAS ================= -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mainMenu">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">
+      <i class="fa-solid fa-bus-simple"></i> BusRoute
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+
+  <div class="offcanvas-body">
+
+    <!-- Links -->
+    <a class="nav-link mb-2" href="/">🏠 Home</a>
+    <a class="nav-link mb-2" href="#">✨ Features</a>
+    <a class="nav-link mb-2" href="#">💰 Pricing</a>
+
+    <hr>
+
+    <!-- Auth section -->
+    <% if (!currentUser) { %>
+      <a href="/auth/login" class="btn btn-primary w-100 mb-2">Login</a>
+      <a href="/auth/register" class="btn btn-outline-secondary w-100">Register</a>
+    <% } else { %>
+
+      <div class="mb-3 p-2 border rounded">
+        <h4>Your Details</h4>
+        <img src="/images/driver.png" alt="driver-image" width="32" height="32">
+        <div><strong>Name:</strong> <%= currentUser.username %></div>
+        <div><strong>Role:</strong> <%= currentUser.role %></div>
+
+        <% if (currentUser.role === "driver" && currentUser.busNumber) { %>
+          <div><strong>Bus Number :</strong> <%= currentUser.busNumber %></div>
+          <div><strong>Route Name :</strong> <%= currentUser.routeName %></div>
+        <% } %>
+      </div>
+
+      <form action="/auth/logout" method="POST">
+        <button class="btn btn-outline-danger w-100">Logout</button>
+      </form>
+
+    <% } %>
+  </div>
+</div>
